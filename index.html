@@ -320,7 +320,9 @@ input[type=range]{width:100%;accent-color:var(--accent2);margin-top:6px;}
       </div>
     </div>
 
-    <div class="recent-lbl">最近の記録</div>
+    <div class="recent-lbl" onclick="goPage('stats')" style="cursor:pointer">
+最近の記録（タップで全部）
+</div>
     <div id="home-recent"><div class="empty-msg">まだ記録がないよ！🌱</div></div>
   </div>
 
@@ -839,7 +841,7 @@ function resetRvForm(){
 
 function updatePlanSelects(){
   const plans=records.filter(r=>r.type==='plan').slice(0,10);
-  const opts='<option value="">（なし・直接入力）</option>'+plans.map(p=>`<option value="${p.id}">${p.date} ${p.theme?.slice(0,20)}</option>`).join('');
+  const opts='<option value="">（なし）</option>'+plans.map(p=>`<option value="${p.id}">${p.date} ${p.theme?.slice(0,20)}</option>`).join('');
   el('wip-plan-ref').innerHTML=opts;
   el('rv-plan-ref').innerHTML=opts;
   updateGalleryPlanRef();
@@ -910,7 +912,7 @@ function genPrompt(){
   const lm={beginner:'初心者',intermediate:'中級者',advanced:'上級者'};
   const planId=el('rv-plan-ref').value;
   const plan=records.find(r=>r.id===parseInt(planId));
-  let text=`あなたはイラスト練習のコーチです。以下は${lm[userLevel]}レベルのユーザーの制作振り返りです。励ましと次の成長につながる具体的なアドバイスを200字程度でください。絵文字を使ってフレンドリーに。\n\n`;
+  let text=`あなたはイラスト練習のコーチです。以下は${lm[userLevel]}レベルのユーザーの制作振り返りです。励ましと次の成長につながる具体的なアドバイスを200字程度でください。\n\n`;
   if(plan){text+=`【テーマ・目標】${plan.theme}\n【挑戦したこと】${plan.challenge||'（なし）'}\n\n`;}
   text+=`【うまくできたこと・気づき】${el('rv-good').value||'（未記入）'}\n【難しかったこと・次の課題】${el('rv-hard').value||'（未記入）'}\n【次回やること】${el('rv-next').value||'（未記入）'}\n【達成感】${'★'.repeat(starVal)||'未評価'}`;
   el('pb').textContent=text;el('pb').classList.add('vis');
@@ -997,6 +999,21 @@ function renderStats(){
     const main=r.type==='plan'?r.theme:r.type==='wip'?r.did:r.type==='review'?r.good:r.task;
     const extra=r.type==='wip'?`<div class="rec-meta">📊 進捗 ${r.progress}%</div>`:r.type==='croquis'?`<div class="rec-meta">✏️ ${r.count}枚${r.time?' / '+r.time:''}</div>`:'';
     return`<div class="rec-item ${r.type==='wip'?'wip':r.type==='review'?'done-rec':r.type==='croquis'?'croquis':r.type==='plan'?'plan':''}">
+    return`<div class="rec-item ${r.type==='wip'?'wip':r.type==='review'?'done-rec':r.type==='croquis'?'croquis':r.type==='plan'?'plan':''}">
+  <button onclick="deleteRecord(${r.id})" style="
+    position:absolute;
+    top:6px;
+    right:6px;
+    background:rgba(0,0,0,.6);
+    color:#fff;
+    border:none;
+    border-radius:50%;
+    width:22px;
+    height:22px;
+    font-size:12px;
+    cursor:pointer;">✕</button>
+
+  <div class="rec-date">
       <div class="rec-date">${fmtDate(r.date)} ${icons[r.type]||''}</div>
       <div class="rec-task">${main?.slice(0,50)||''}${(main?.length||0)>50?'…':''}</div>
       ${r.star>0?`<div style="font-size:12px;margin-top:3px">${'⭐'.repeat(r.star)}</div>`:''}
@@ -1195,6 +1212,13 @@ window.onload=()=>{
   if(!done)initQuiz();else showMain();
 };
 </script>
-
+function deleteRecord(id){
+  if(!confirm("削除する？")) return;
+  records = records.filter(r=>r.id !== id);
+  save();
+  renderHome();
+  renderStats();
+  showToast("🗑️ 削除した");
+}
 </body>
 </html>
