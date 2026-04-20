@@ -1212,13 +1212,6 @@ window.onload=()=>{
   if(!done)initQuiz();else showMain();
 };
 </script>
-function deleteRecord(id){
-  if(!confirm("削除する？")) return;
-  records = records.filter(r=>r.id !== id);
-  save();
-  renderHome();
-  renderStats();
-  showToast("🗑️ 削除した");
-}
+
 </body>
 </html>
